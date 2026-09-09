@@ -1,0 +1,311 @@
+{
+  "info": {
+    "name": "Trello API - Testes de QA",
+    "description": "Coleção de testes funcionais da API do Trello (Boards, Lists, Cards) - projeto final PAC TripleTen",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "https://api.trello.com/1" },
+    { "key": "trello_key", "value": "COLOQUE_SUA_KEY_AQUI" },
+    { "key": "trello_token", "value": "COLOQUE_SEU_TOKEN_AQUI" },
+    { "key": "board_id", "value": "" },
+    { "key": "list_id", "value": "" },
+    { "key": "card_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Boards",
+      "item": [
+        {
+          "name": "Criar board",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/boards/?key={{trello_key}}&token={{trello_token}}&name=Board de Teste QA",
+              "host": ["{{base_url}}"],
+              "path": ["boards", ""],
+              "query": [
+                { "key": "key", "value": "{{trello_key}}" },
+                { "key": "token", "value": "{{trello_token}}" },
+                { "key": "name", "value": "Board de Teste QA" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 - board criado', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Resposta contem o nome correto', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.name).to.eql('Board de Teste QA');",
+                  "    pm.collectionVariables.set('board_id', jsonData.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Lists",
+      "item": [
+        {
+          "name": "Criar lista (To Do)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/lists?key={{trello_key}}&token={{trello_token}}&name=To Do&idBoard={{board_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["lists"],
+              "query": [
+                { "key": "key", "value": "{{trello_key}}" },
+                { "key": "token", "value": "{{trello_token}}" },
+                { "key": "name", "value": "To Do" },
+                { "key": "idBoard", "value": "{{board_id}}" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 - lista criada', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Lista pertence ao board correto', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.idBoard).to.eql(pm.collectionVariables.get('board_id'));",
+                  "    pm.collectionVariables.set('list_id', jsonData.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cards",
+      "item": [
+        {
+          "name": "Criar card - cenario valido",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/cards?key={{trello_key}}&token={{trello_token}}&idList={{list_id}}&name=Testar login invalido&desc=Card criado via automacao",
+              "host": ["{{base_url}}"],
+              "path": ["cards"],
+              "query": [
+                { "key": "key", "value": "{{trello_key}}" },
+                { "key": "token", "value": "{{trello_token}}" },
+                { "key": "idList", "value": "{{list_id}}" },
+                { "key": "name", "value": "Testar login invalido" },
+                { "key": "desc", "value": "Card criado via automacao" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 - card criado', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Nome do card esta correto', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.name).to.eql('Testar login invalido');",
+                  "    pm.collectionVariables.set('card_id', jsonData.id);",
+                  "});",
+                  "",
+                  "pm.test('Card pertence a lista correta', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.idList).to.eql(pm.collectionVariables.get('list_id'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar card - cenario negativo (sem idList)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/cards?key={{trello_key}}&token={{trello_token}}&name=Card sem lista",
+              "host": ["{{base_url}}"],
+              "path": ["cards"],
+              "query": [
+                { "key": "key", "value": "{{trello_key}}" },
+                { "key": "token", "value": "{{trello_token}}" },
+                { "key": "name", "value": "Card sem lista" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 - idList obrigatorio ausente', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar card criado",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/cards/{{card_id}}?key={{trello_key}}&token={{trello_token}}",
+              "host": ["{{base_url}}"],
+              "path": ["cards", "{{card_id}}"],
+              "query": [
+                { "key": "key", "value": "{{trello_key}}" },
+                { "key": "token", "value": "{{trello_token}}" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 - card encontrado', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mover card de lista",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/cards/{{card_id}}?key={{trello_key}}&token={{trello_token}}&idList={{list_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["cards", "{{card_id}}"],
+              "query": [
+                { "key": "key", "value": "{{trello_key}}" },
+                { "key": "token", "value": "{{trello_token}}" },
+                { "key": "idList", "value": "{{list_id}}" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 - card movido', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('idList foi atualizado corretamente', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.idList).to.eql(pm.collectionVariables.get('list_id'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar card com id inexistente",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/cards/id_que_nao_existe_123?key={{trello_key}}&token={{trello_token}}",
+              "host": ["{{base_url}}"],
+              "path": ["cards", "id_que_nao_existe_123"],
+              "query": [
+                { "key": "key", "value": "{{trello_key}}" },
+                { "key": "token", "value": "{{trello_token}}" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 ou 404 - card nao encontrado', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 404]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Deletar card",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/cards/{{card_id}}?key={{trello_key}}&token={{trello_token}}",
+              "host": ["{{base_url}}"],
+              "path": ["cards", "{{card_id}}"],
+              "query": [
+                { "key": "key", "value": "{{trello_key}}" },
+                { "key": "token", "value": "{{trello_token}}" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 - card deletado', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar card deletado (deve falhar)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/cards/{{card_id}}?key={{trello_key}}&token={{trello_token}}",
+              "host": ["{{base_url}}"],
+              "path": ["cards", "{{card_id}}"],
+              "query": [
+                { "key": "key", "value": "{{trello_key}}" },
+                { "key": "token", "value": "{{trello_token}}" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 ou 404 - card nao existe mais', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 404]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
